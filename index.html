@@ -325,7 +325,7 @@ tbody tr:last-child td{border-bottom:none}
 <div class="hero" id="hero">
 <div class="hero-text">
 <div class="hero-eyebrow">Braskem · Rotina de Recomendações de Processo</div>
-<div class="hero-title">Relatório Q3 — Análise de RRPs</div>
+<div class="hero-title">Relatório Q3 PP4 PE7 — Análise de RRPs</div>
 <div class="hero-sub">Monitoramento consolidado de recomendações de processo, prioridades críticas e indicadores de implementação por setor operacional.</div>
 <div class="hero-stats">
 <div class="hero-stat"><div class="hero-stat-num" id="h-total">165</div><div class="hero-stat-lbl">Total de RRPs</div></div>
@@ -868,13 +868,24 @@ function pFile(file){
   file.name.toLowerCase().endsWith('.csv')?rd.readAsText(file):rd.readAsBinaryString(file);
 }
 
+function normMes(v){
+  if(v===null||v===undefined||v==='')return 'N/A';
+  if(typeof v==='number')return new Date((v-25569)*86400000).toISOString().substring(0,7);
+  const s=String(v).trim();
+  const mBar=s.match(/^(\d{1,2})\/(\d{2,4})$/);
+  if(mBar){let mm=mBar[1].padStart(2,'0');let yy=mBar[2];if(yy.length===2)yy='20'+yy;return yy+'-'+mm;}
+  const mIso=s.match(/^(\d{4})-(\d{1,2})/);
+  if(mIso)return mIso[1]+'-'+mIso[2].padStart(2,'0');
+  return s.substring(0,7)||'N/A';
+}
+
 function iData(rows){
   if(!rows.length){toast('Nenhum dado encontrado');return}
   const nrm=s=>String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
   const ks=[...new Set(rows.flatMap(r=>Object.keys(r)))];
   const fc=(...ns)=>ks.find(k=>ns.some(n=>nrm(k).includes(nrm(n))));
   const uC=fc('unidade'),sC=fc('setor'),tC=fc('tag'),mC=fc('mes','month'),pC=fc('prioridade'),stC=fc('status'),tmC=fc('tempo','dias'),rC=fc('recomendacao','recomendação'),anC=fc('anomalia'),sqC=fc('sequencia','sequência','seq','nº','n°','numero','número');
-  all=rows.map(r=>({unidade:r[uC]||'N/A',setor:r[sC]||'N/A',tag:r[tC]||'N/A',seq:r[sqC]!==undefined&&r[sqC]!==null&&r[sqC]!==''?r[sqC]:'',mes:r[mC]?(typeof r[mC]==='number'?new Date((r[mC]-25569)*86400000).toISOString().substring(0,7):String(r[mC]).substring(0,7)):'N/A',prio:r[pC]||'Media',status:r[stC]||'Pendente',tempo:(r[tmC]===null||r[tmC]===undefined||r[tmC]===''||isNaN(parseFloat(r[tmC])))?null:parseFloat(r[tmC]),rec:r[rC]||'',anomalia:r[anC]||''}));
+  all=rows.map(r=>({unidade:r[uC]||'N/A',setor:r[sC]||'N/A',tag:r[tC]||'N/A',seq:r[sqC]!==undefined&&r[sqC]!==null&&r[sqC]!==''?r[sqC]:'',mes:normMes(r[mC]),prio:r[pC]||'Media',status:r[stC]||'Pendente',tempo:(r[tmC]===null||r[tmC]===undefined||r[tmC]===''||isNaN(parseFloat(r[tmC])))?null:parseFloat(r[tmC]),rec:r[rC]||'',anomalia:r[anC]||''}));
   canonSetor(all);
   saveData(all);
   filt=[...all];
